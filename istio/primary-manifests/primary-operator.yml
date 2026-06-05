@@ -8,3 +8,5 @@ spec:
         clusterName: primary
       network: network1
       externalIstiod: true
+    sidecarInjectorWebhook:
+      enableNamespacesByDefault: true

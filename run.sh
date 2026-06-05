@@ -31,3 +31,11 @@ echo "[6] Installing MetalLB in all clusters..."
 # Generate CA and client certificates for cluster authentication
 echo "[7] Generating CA and client certificates for cluster authentication..."
 ./certs/generate.sh
+
+# Configure Istio on primary cluster
+echo "[8] Configuring Istio on primary cluster..."
+./istio/istio-config-primary.sh
+
+# Configure Istio on remote clusters
+echo "[9] Configuring Istio on remote clusters..."
+./istio/istio-config-remotes.sh
