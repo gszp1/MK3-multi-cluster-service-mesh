@@ -1,0 +1,7 @@
+.idea/
+.terraform/
+vockey.pem
+core-key.pem
+terraform.tfstate.*
+terraform.tfstate
+config.json
