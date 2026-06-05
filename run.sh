@@ -23,3 +23,11 @@ terraform -chdir="$INFRA_DIR" show
 # Create kubeconfig for connecting to clusters
 echo "[5] Setting up kubeconfig for cluster access..."
 ./connect-clusters.sh
+
+# Install MetalLB in all clusters
+echo "[6] Installing MetalLB in all clusters..."
+./metallb/install.sh
+
+# Generate CA and client certificates for cluster authentication
+echo "[7] Generating CA and client certificates for cluster authentication..."
+./certs/generate.sh
