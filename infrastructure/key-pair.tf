@@ -10,6 +10,6 @@ resource "aws_key_pair" "core-kp" {
 
 resource "local_file" "core_key" {
   content         = tls_private_key.core_pk.private_key_pem
-  filename        = "${path.module}/ouputs/core-key.pem"
+  filename        = "${path.module}/outputs/core-key.pem"
   file_permission = "0400"
 }

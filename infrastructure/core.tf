@@ -66,4 +66,21 @@ resource "aws_instance" "core" {
     Name    = "core"
     Project = "multi-cluster-service-mesh"
   }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo curl -Lo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64",
+      "sudo chmod +x /usr/local/bin/kind",
+      "curl -LO \"https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\"",
+      "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
+      "rm kubectl",
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = tls_private_key.core_pk.private_key_pem
+      host        = self.public_ip
+    }
+  }
 }
