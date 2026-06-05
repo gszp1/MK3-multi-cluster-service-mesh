@@ -69,6 +69,10 @@ resource "aws_instance" "core" {
 
   provisioner "remote-exec" {
     inline = [
+      "sudo sysctl -w fs.inotify.max_user_watches=524288",
+      "sudo sysctl -w fs.inotify.max_user_instances=512",
+      "echo 'fs.inotify.max_user_watches=524288' | sudo tee -a /etc/sysctl.conf",
+      "echo 'fs.inotify.max_user_instances=512'  | sudo tee -a /etc/sysctl.conf",
       "sudo curl -Lo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64",
       "sudo chmod +x /usr/local/bin/kind",
       "curl -LO \"https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\"",

@@ -20,3 +20,6 @@ terraform -chdir="$INFRA_DIR" apply -auto-approve
 echo "[4] Showing Terraform state..."
 terraform -chdir="$INFRA_DIR" show
 
+# Create kubeconfig for connecting to clusters
+echo "[5] Setting up kubeconfig for cluster access..."
+./connect-clusters.sh
