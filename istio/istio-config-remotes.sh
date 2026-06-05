@@ -38,6 +38,35 @@ for CTX in "${!CLUSTER_NETWORKS[@]}"; do
     envsubst < "$SCRIPT_DIR/remote-manifests/remote-operator.yml.tmpl" \
     | istioctl install --context="$CTX" -y -f -
 
+  echo "  [3b] Creating istiod endpoints pointing to primary east-west gateway..."
+  ISTIOD_REMOTE_ADDRESS="$ISTIOD_REMOTE_ADDRESS" \
+    envsubst < "$SCRIPT_DIR/remote-manifests/istiod-endpoints.yml.tmpl" \
+    | kubectl --context="$CTX" -n istio-system apply -f -
+
+  echo "  [3c] Patching sidecar-injector webhook caBundle with shared root CA..."
+  CACERT=$(kubectl --context="$CTX" -n istio-system \
+    get secret cacerts -o jsonpath='{.data.root-cert\.pem}')
+  for MWC in istio-sidecar-injector istio-revision-tag-default; do
+    kubectl --context="$CTX" get mutatingwebhookconfiguration "$MWC" -o json \
+      | jq --arg ca "$CACERT" '.webhooks[].clientConfig.caBundle = $ca' \
+      | kubectl --context="$CTX" replace -f -
+  done
+
+  echo "  [3d] Creating remote secret on primary (needed before east-west gateway)..."
+  REMOTE_API_SERVER="https://${CLUSTER_NAME}-control-plane:6443"
+  istioctl create-remote-secret \
+    --context="$CTX" \
+    --name="$CLUSTER_NAME" \
+    --server="$REMOTE_API_SERVER" \
+    | kubectl --context="kind-primary" apply -f -
+
+  echo "  [3e] Creating istio-ca-root-cert configmap on remote..."
+  ROOT_CERT=$(kubectl --context="$CTX" -n istio-system \
+    get secret cacerts -o jsonpath='{.data.root-cert\.pem}' | base64 -d)
+  kubectl --context="$CTX" -n istio-system create configmap istio-ca-root-cert \
+    --from-literal="root-cert.pem=${ROOT_CERT}" \
+    --dry-run=client -o yaml | kubectl --context="$CTX" apply -f -
+
   echo "  [4] Installing east-west gateway..."
   NETWORK="$NETWORK" envsubst < "$SCRIPT_DIR/remote-manifests/eastwest-operator.yml.tmpl" \
     | istioctl install --context="$CTX" -y -f -
@@ -48,12 +77,6 @@ for CTX in "${!CLUSTER_NETWORKS[@]}"; do
 
   echo "  [6] Exposing services through east-west gateway..."
   kubectl --context="$CTX" apply -f "$SCRIPT_DIR/remote-manifests/expose-services.yml"
-
-  echo "  [7] Creating remote secret on primary..."
-  istioctl create-remote-secret \
-    --context="$CTX" \
-    --name="$CLUSTER_NAME" \
-    | kubectl --context="kind-primary" apply -f -
 
   echo "  -> $CTX done."
 done
