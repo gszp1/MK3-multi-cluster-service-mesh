@@ -5,3 +5,4 @@ core-key.pem
 terraform.tfstate.*
 terraform.tfstate
 config.json
+kubeconfig/
