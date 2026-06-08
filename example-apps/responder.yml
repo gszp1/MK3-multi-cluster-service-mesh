@@ -1,0 +1,29 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: responder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: responder
+  template:
+    metadata:
+      labels:
+        app: responder
+    spec:
+      containers:
+        - name: responder
+          image: responder:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "default"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

@@ -1,0 +1,31 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: sender
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sender
+  template:
+    metadata:
+      labels:
+        app: sender
+    spec:
+      containers:
+        - name: sender
+          image: sender:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "default"
+            - name: RESPONDER_URL
+              value: "PLACEHOLDER"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
