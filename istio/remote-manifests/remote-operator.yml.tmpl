@@ -1,0 +1,11 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  profile: remote
+  values:
+    istiodRemote:
+      injectionPath: /inject/cluster/${CLUSTER_NAME}/net/${NETWORK}
+    global:
+      remotePilotAddress: ${ISTIOD_REMOTE_ADDRESS}
+    sidecarInjectorWebhook:
+      enableNamespacesByDefault: true
