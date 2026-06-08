@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: responder
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
