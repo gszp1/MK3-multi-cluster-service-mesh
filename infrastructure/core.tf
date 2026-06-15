@@ -113,6 +113,21 @@ resource "aws_instance" "core" {
 
   provisioner "remote-exec" {
     inline = [
+      "sudo dnf install -y docker",
+      "sudo systemctl enable --now docker",
+      "sudo usermod -aG docker ec2-user",
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = tls_private_key.core_pk.private_key_pem
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
       "kind create cluster --name primary  --config /home/ec2-user/cluster/primary.yml",
       "kind create cluster --name remote-1 --config /home/ec2-user/cluster/remote-1.yml",
       "kind create cluster --name remote-2 --config /home/ec2-user/cluster/remote-2.yml",
