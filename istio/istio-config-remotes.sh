@@ -60,6 +60,15 @@ for CTX in "${!CLUSTER_NETWORKS[@]}"; do
     --server="$REMOTE_API_SERVER" \
     | kubectl --context="kind-primary" apply -f -
 
+  echo "  [3d-1] Labeling remote secret for Kiali multi-cluster autodetection..."
+  kubectl --context="kind-primary" -n istio-system label secret \
+    "istio-remote-secret-${CLUSTER_NAME}" kiali.io/multiCluster=true --overwrite
+
+  echo "  [3d-2] Extending istio-reader RBAC so Kiali can read workloads on $CTX..."
+  kubectl --context="$CTX" patch clusterrole istio-reader-clusterrole-istio-system --type=json -p='[
+    {"op":"add","path":"/rules/-","value":{"apiGroups":["apps"],"resources":["deployments","statefulsets","daemonsets"],"verbs":["get","list","watch"]}}
+  ]'
+
   echo "  [3e] Creating istio-ca-root-cert configmap on remote..."
   ROOT_CERT=$(kubectl --context="$CTX" -n istio-system \
     get secret cacerts -o jsonpath='{.data.root-cert\.pem}' | base64 -d)
