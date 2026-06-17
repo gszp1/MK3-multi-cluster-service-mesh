@@ -12,6 +12,7 @@ terraform -chdir="$INFRA_DIR" destroy -auto-approve
 echo "[2] Cleaning up Terraform state files, SSH keys and config..."
 rm -f "$INFRA_DIR/terraform.tfstate"
 rm -f "$INFRA_DIR/terraform.tfstate.*"
+rm -f "$INFRA_DIR/terraform.tfstate.backup"
 rm -f "$INFRA_DIR/outputs/core-key.pem"
 rm -f "$INFRA_DIR/outputs/config.json"
 

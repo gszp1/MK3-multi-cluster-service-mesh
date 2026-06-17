@@ -15,11 +15,12 @@ spec:
       containers:
         - name: sender
           image: sender:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
             - name: RESPONDER_URL
-              value: "PLACEHOLDER"
+              value: "http://responder-svc.responder-ns.svc.cluster.local:8080/api"
           resources:
             requests:
               memory: "16Mi"

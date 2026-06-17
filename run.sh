@@ -31,3 +31,11 @@ echo "[6] Installing MetalLB in all clusters..."
 # Generate CA and client certificates for cluster authentication
 echo "[7] Generating CA and client certificates for cluster authentication..."
 ./certs/generate.sh
+
+# Build example app images and load them into the kind clusters
+echo "[8] Building and loading example app images into clusters..."
+./example-apps/load-images.sh
+
+# Deploy example app
+echo "[9] Deploying example app to clusters..."
+./example-apps/deploy.sh

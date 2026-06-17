@@ -15,6 +15,7 @@ spec:
       containers:
         - name: responder
           image: responder:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           resources:
