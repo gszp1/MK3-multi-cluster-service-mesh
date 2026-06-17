@@ -1,14 +1,14 @@
 # Stage 1: Build
-FROM maven:3.9-eclipse-temurin-21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-COPY src ./src
-RUN mvn package -DskipTests -B
+COPY go.mod ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/sender .
 
 # Stage 2: Run
-FROM eclipse-temurin:21-jre-alpine
+FROM gcr.io/distroless/static-debian12
 WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/sender /app/sender
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["/app/sender"]

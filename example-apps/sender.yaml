@@ -18,14 +18,12 @@ spec:
           ports:
             - containerPort: 8080
           env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: "default"
             - name: RESPONDER_URL
               value: "PLACEHOLDER"
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "16Mi"
+              cpu: "10m"
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: "64Mi"
+              cpu: "100m"

@@ -1,0 +1,16 @@
+services:
+  responder:
+    build: ./responder
+    image: responder:latest
+    container_name: responder
+
+  sender:
+    build: ./sender
+    image: sender:latest
+    container_name: sender
+    environment:
+      RESPONDER_URL: "http://responder:8080/api"
+    ports:
+      - "18080:8080"
+    depends_on:
+      - responder
