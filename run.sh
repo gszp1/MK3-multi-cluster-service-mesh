@@ -39,3 +39,11 @@ echo "[8] Configuring Istio on primary cluster..."
 # Configure Istio on remote clusters
 echo "[9] Configuring Istio on remote clusters..."
 ./istio/istio-config-remotes.sh
+
+# Build example app images and load them into the kind clusters
+echo "[8] Building and loading example app images into clusters..."
+./example-apps/load-images.sh
+
+# Deploy example app
+echo "[9] Deploying example app to clusters..."
+./example-apps/deploy.sh

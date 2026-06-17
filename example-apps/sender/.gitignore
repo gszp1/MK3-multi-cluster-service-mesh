@@ -1,0 +1,14 @@
+# Binaries
+/sender
+*.exe
+
+# Test & coverage output
+*.test
+*.out
+
+### IntelliJ IDEA ###
+.idea
+*.iml
+
+### VS Code ###
+.vscode/
