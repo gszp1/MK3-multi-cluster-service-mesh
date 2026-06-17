@@ -32,7 +32,7 @@ fi
 SSH_OPTS="-i $KEY -o StrictHostKeyChecking=no -o BatchMode=yes"
 
 echo "[1] Building images..."
-"$SCRIPT_DIR/build.sh" "$TAG"
+"$SCRIPT_DIR/build-images.sh" "$TAG"
 
 echo "[2] Saving images to archive..."
 LOCAL_ARCHIVE="$(mktemp --suffix=.tar)"
