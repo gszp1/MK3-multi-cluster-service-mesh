@@ -17,3 +17,18 @@
 - execute run.sh script
 - (optional) run example application using run_example.sh script from /example directory
 - (optional) run cleanup.sh script to destroy the infrastructure created by this project
+
+## Running test application
+- Test application is automatically deployed in configuration:
+    - remote-1 -> sender (receives message from user and sends it to the responder - reads response from responder and returns to the user)
+    - remote-2 -> responder (receives message from sender and returns response to sender)
+    - communication goes like this: user -> sender(cluster: remote-1) -> responder(cluster: remote-2) -> sender -> user
+- connect to EC2 instance - connect-vm.sh
+- get IP for remote-1 node: 
+```
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' remote-1-control-plane
+```
+- send message to sender: 
+```
+curl "http://<remote-1-node-ip>:30001/sender?message=<your-message>"
+```
