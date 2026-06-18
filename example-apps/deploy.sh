@@ -15,13 +15,24 @@ if [[ ! -f "$KUBECONFIG" ]]; then
   exit 1
 fi
 
-# Namespaces + services exist on BOTH clusters so the east-west gateway can
-# resolve service DNS cross-cluster, even where the workload does not run.
+seed_ca_root_cert() {
+  local ctx="$1" ns="$2"
+  local root_cert
+  root_cert="$(kubectl --context "$ctx" -n istio-system \
+    get configmap istio-ca-root-cert -o jsonpath='{.data.root-cert\.pem}')"
+  kubectl --context "$ctx" -n "$ns" create configmap istio-ca-root-cert \
+    --from-literal="root-cert.pem=${root_cert}" \
+    --dry-run=client -o yaml | kubectl --context "$ctx" -n "$ns" apply -f -
+}
+
 apply_shared() {
   local ctx="$1"
   echo "  - namespaces (sender-ns, responder-ns)"
   kubectl --context "$ctx" apply -f "$SCRIPT_DIR/sender-ns.yml"
   kubectl --context "$ctx" apply -f "$SCRIPT_DIR/responder-ns.yml"
+  echo "  - istio-ca-root-cert configmap (sender-ns, responder-ns)"
+  seed_ca_root_cert "$ctx" sender-ns
+  seed_ca_root_cert "$ctx" responder-ns
   echo "  - services (sender-svc, responder-svc)"
   kubectl --context "$ctx" apply -n sender-ns    -f "$SCRIPT_DIR/sender-svc.yml"
   kubectl --context "$ctx" apply -n responder-ns -f "$SCRIPT_DIR/responder-svc.yml"
