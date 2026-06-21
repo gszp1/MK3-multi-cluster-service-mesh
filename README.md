@@ -44,7 +44,12 @@ Both `prometheus/install.sh` and `kiali/install-kiali.sh` are run automatically
 by `run.sh`. To view the graph:
 - port-forward Kiali: `./kiali/kiali-port-forward.sh` then open http://localhost:20002
 - in **Traffic Graph**, select all namespaces and enable **Cluster boxing**
-- edges only appear while traffic flows, so generate some load, e.g.:
+- edges only appear while traffic flows, so generate continuous load with the
+  helper script. Run it **from your local machine** — it opens an SSH session to
+  the EC2 instance and runs the request loop there (auto-detecting the remote-1
+  node IP), so nothing needs to be copied or set up manually:
 ```
-watch -n1 'curl -s "http://<remote-1-node-ip>:30080/api?content=<your-message>"'
+./generate-load.sh
 ```
+  Options: `-i <interval>` `-m <message>` `-c <concurrency>` `-H <node-ip>`
+  (e.g. `./generate-load.sh -i 0.5 -c 4`). Stop it with Ctrl-C.
