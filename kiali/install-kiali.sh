@@ -18,6 +18,7 @@ helm upgrade --install \
   --set auth.strategy="anonymous" \
   --set server.web_port=20001 \
   --set deployment.service_type=LoadBalancer \
+  --set external_services.prometheus.url="http://prometheus.istio-system:9090" \
   --repo https://kiali.org/helm-charts \
   kiali-server \
   kiali-server

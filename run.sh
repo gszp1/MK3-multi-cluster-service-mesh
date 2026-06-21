@@ -41,9 +41,17 @@ echo "[9] Configuring Istio on remote clusters..."
 ./istio/istio-config-remotes.sh
 
 # Build example app images and load them into the kind clusters
-echo "[8] Building and loading example app images into clusters..."
+echo "[10] Building and loading example app images into clusters..."
 ./example-apps/load-images.sh
 
 # Deploy example app
-echo "[9] Deploying example app to clusters..."
+echo "[11] Deploying example app to clusters..."
 ./example-apps/deploy.sh
+
+# Install Prometheus (per cluster) + federation for cross-cluster observability
+echo "[12] Installing Prometheus and configuring federation..."
+./prometheus/install.sh
+
+# Install Kiali on the primary cluster
+echo "[13] Installing Kiali..."
+./kiali/install-kiali.sh

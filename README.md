@@ -27,8 +27,24 @@
 - get IP for remote-1 node: 
 ```
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' remote-1-control-plane
-```
+````
 - send message to sender: 
 ```
-curl "http://<remote-1-node-ip>:30001/sender?message=<your-message>"
+curl "http://<remote-1-node-ip>:30080/api?content=<your-message>"
+```
+
+## Observability (Kiali + Prometheus)
+Cross-cluster traffic is observable in Kiali. Because Kiali queries a single
+Prometheus, each cluster runs its own Prometheus and the primary federates the
+two remotes (`prometheus/install.sh`). Istio adds `source_cluster` /
+`destination_cluster` labels to its metrics, so the Kiali graph can box and
+connect workloads across clusters.
+
+Both `prometheus/install.sh` and `kiali/install-kiali.sh` are run automatically
+by `run.sh`. To view the graph:
+- port-forward Kiali: `./kiali/kiali-port-forward.sh` then open http://localhost:20002
+- in **Traffic Graph**, select all namespaces and enable **Cluster boxing**
+- edges only appear while traffic flows, so generate some load, e.g.:
+```
+watch -n1 'curl -s "http://<remote-1-node-ip>:30080/api?content=<your-message>"'
 ```
