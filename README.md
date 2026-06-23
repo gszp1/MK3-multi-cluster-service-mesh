@@ -10,7 +10,7 @@
 - Install Istio control plane on primary cluster
 - Install Istio remote on remote-1 and remote-2 clusters
 - Install East-West gateways and other components on clusters
-- Deploy sample applications on remote-2 and remote-1 clusters so that they can communicate using service mesh (TODO)
+- Deploy sample applications on remote-2 and remote-1 clusters so that they can communicate using service mesh
 
 ## How to run
 - Setup AWS credentials and region on your local machine
@@ -53,3 +53,19 @@ by `run.sh`. To view the graph:
 ```
   Options: `-i <interval>` `-m <message>` `-c <concurrency>` `-H <node-ip>`
   (e.g. `./generate-load.sh -i 0.5 -c 4`). Stop it with Ctrl-C.
+
+## Adding KWOK clusters
+As KWOK clusters are not meant to be used for application deployment, usage of these clusters is limited to deployment
+and connecting to service mesh as additional remote clusters:
+```
+./kwok/add-cluster.sh 
+```
+This script will deploy KWOK cluster, install istio data plane (remote profile), east-west gateways and register it in 
+service mesh. <br>
+<br>
+<br>
+We can list all clusters in service mesh:
+```
+istioctl --context kind-primary remote-clusters
+```
+If status is seen as "synced" - cluster is correctly registered in service-mesh and is reachable for primary cluster

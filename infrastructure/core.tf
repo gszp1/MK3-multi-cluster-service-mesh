@@ -78,6 +78,12 @@ resource "aws_instance" "core" {
       "curl -LO \"https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl\"",
       "sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl",
       "rm kubectl",
+      "curl -Lo kwok https://github.com/kubernetes-sigs/kwok/releases/download/v0.8.0/kwok-linux-amd64",
+      "sudo install -o root -g root -m 0755 kwok /usr/local/bin/kwok",
+      "rm kwok",
+      "curl -Lo kwokctl https://github.com/kubernetes-sigs/kwok/releases/download/v0.8.0/kwokctl-linux-amd64",
+      "sudo install -o root -g root -m 0755 kwokctl /usr/local/bin/kwokctl",
+      "rm kwokctl",
     ]
 
     connection {

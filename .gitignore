@@ -12,3 +12,4 @@ certs/primary/
 certs/remote-1/
 certs/remote-2/
 certs/root-cert.pem
+certs/remote-kwok/*
