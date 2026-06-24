@@ -4,6 +4,7 @@
 #   ./kwok/add-cluster.sh [NAME] [NETWORK] [APISERVER_PORT]
 #
 # Defaults: NAME=remote-kwok NETWORK=network4 APISERVER_PORT=6444
+#
 
 set -euo pipefail
 
@@ -47,31 +48,46 @@ SSH_OPTS="-i $KEY -o StrictHostKeyChecking=no -o BatchMode=yes"
 ssh_core() { ssh $SSH_OPTS ec2-user@"$HOST" "$@"; }
 
 
+REGISTRY="$SCRIPT_DIR/kwok-clusters.json"
+
+if ! [[ "$APISERVER_PORT" =~ ^[0-9]+$ ]]; then
+  echo "Error: APISERVER_PORT must be a number, got '$APISERVER_PORT'."
+  exit 1
+fi
+
+if [[ ! -f "$REGISTRY" ]]; then
+  echo '{"clusters":[]}' > "$REGISTRY"
+fi
+
+if jq -e --arg n "$NAME" --arg net "$NETWORK" --argjson p "$APISERVER_PORT" \
+  '.clusters[] | select(.name==$n and .network==$net and .apiserver_port==$p)' \
+  "$REGISTRY" >/dev/null; then
+  echo "Cluster '$NAME' (network=$NETWORK, port=$APISERVER_PORT) is already registered in $REGISTRY."
+  echo "Nothing to do. Remove its entry to recreate it."
+  exit 0
+fi
+
+if jq -e --arg n "$NAME" '.clusters[] | select(.name==$n)' "$REGISTRY" >/dev/null; then
+  echo "Error: a cluster named '$NAME' is already registered (with a different network/port)."
+  echo "Pick a different NAME or remove the existing entry from $REGISTRY."
+  exit 1
+fi
+
+if jq -e --argjson p "$APISERVER_PORT" '.clusters[] | select(.apiserver_port==$p)' "$REGISTRY" >/dev/null; then
+  OWNER=$(jq -r --argjson p "$APISERVER_PORT" \
+    '.clusters[] | select(.apiserver_port==$p) | .name' "$REGISTRY")
+  echo "Error: apiserver port $APISERVER_PORT is already used by cluster '$OWNER'."
+  echo "Pick a different APISERVER_PORT."
+  exit 1
+fi
+
+
 echo "[1] Creating kwok cluster '$NAME' on $HOST (docker runtime)..."
 ssh_core "kwokctl get clusters | grep -qx '$NAME' || \
   kwokctl create cluster --name '$NAME' --runtime docker --kube-apiserver-port $APISERVER_PORT"
 
 echo "[2] Adding a schedulable fake node..."
-
-ssh_core "kwokctl --name '$NAME' kubectl apply -f -" <<'EOF'
-apiVersion: v1
-kind: Node
-metadata:
-  name: kwok-node-0
-  annotations:
-    kwok.x-k8s.io/node: fake
-    node.alpha.kubernetes.io/ttl: "0"
-  labels:
-    type: kwok
-    kubernetes.io/hostname: kwok-node-0
-    kubernetes.io/os: linux
-    kubernetes.io/arch: amd64
-status:
-  allocatable: { cpu: "32", memory: 256Gi, pods: "256" }
-  capacity:    { cpu: "32", memory: 256Gi, pods: "256" }
-  nodeInfo: { kubeletVersion: fake }
-  phase: Running
-EOF
+ssh_core "kwokctl --name '$NAME' kubectl apply -f -" < "$SCRIPT_DIR/node.yml"
 
 echo "[3] Connecting kwok apiserver to the '$KIND_NETWORK' docker network..."
 ssh_core "docker network connect '$KIND_NETWORK' '$APISERVER_CONTAINER' 2>/dev/null || true"
@@ -191,6 +207,12 @@ kubectl --context="$CTX" -n istio-system \
 
 echo "  [6i] Exposing services through east-west gateway..."
 kubectl --context="$CTX" apply -f "$TMPL_DIR/expose-services.yml"
+
+echo "[7] Registering cluster in $REGISTRY..."
+jq --arg n "$NAME" --arg net "$NETWORK" --argjson p "$APISERVER_PORT" \
+  '.clusters += [{"name":$n,"network":$net,"apiserver_port":$p}]' \
+  "$REGISTRY" > "$REGISTRY.new"
+mv "$REGISTRY.new" "$REGISTRY"
 
 echo ""
 echo "Done. kwok cluster '$NAME' joined the mesh (context: $CTX, network: $NETWORK)."
