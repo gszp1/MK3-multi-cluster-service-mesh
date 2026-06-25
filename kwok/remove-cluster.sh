@@ -79,6 +79,14 @@ if [[ -f "$REGISTRY" ]]; then
   mv "$REGISTRY.new" "$REGISTRY"
 fi
 
+echo "[7] Re-running Kiali install so the removed cluster disappears from its view..."
+if kubectl --context="kind-primary" -n istio-system get deployment/kiali >/dev/null 2>&1; then
+  bash "$REPO_DIR/kiali/install-kiali.sh"
+  kubectl --context="kind-primary" -n istio-system rollout status deployment/kiali --timeout=120s || true
+else
+  echo "    (Kiali not installed, skipping)"
+fi
+
 echo ""
 echo "Done. kwok cluster '$NAME' removed from the mesh."
 echo "Verify from the primary:"

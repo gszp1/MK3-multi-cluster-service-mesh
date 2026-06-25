@@ -190,6 +190,15 @@ istioctl create-remote-secret \
   | sed -E 's/( *)certificate-authority-data:.*/\1insecure-skip-tls-verify: true/' \
   | kubectl --context="kind-primary" apply -f -
 
+echo "  [6e-1] Labeling remote secret for Kiali multi-cluster autodetection..."
+kubectl --context="kind-primary" -n istio-system label secret \
+  "istio-remote-secret-${NAME}" kiali.io/multiCluster=true --overwrite
+
+echo "  [6e-2] Extending istio-reader RBAC so Kiali can read workloads on $CTX..."
+kubectl --context="$CTX" patch clusterrole istio-reader-clusterrole-istio-system --type=json -p='[
+  {"op":"add","path":"/rules/-","value":{"apiGroups":["apps"],"resources":["deployments","statefulsets","daemonsets"],"verbs":["get","list","watch"]}}
+]'
+
 echo "  [6f] Creating istio-ca-root-cert configmap on the kwok cluster..."
 ROOT_CERT=$(kubectl --context="$CTX" -n istio-system \
   get secret cacerts -o jsonpath='{.data.root-cert\.pem}' | base64 -d)
@@ -213,6 +222,14 @@ jq --arg n "$NAME" --arg net "$NETWORK" --argjson p "$APISERVER_PORT" \
   '.clusters += [{"name":$n,"network":$net,"apiserver_port":$p}]' \
   "$REGISTRY" > "$REGISTRY.new"
 mv "$REGISTRY.new" "$REGISTRY"
+
+echo "[8] Re-running Kiali install so it discovers the new remote cluster..."
+if kubectl --context="kind-primary" -n istio-system get deployment/kiali >/dev/null 2>&1; then
+  bash "$REPO_DIR/kiali/install-kiali.sh"
+  kubectl --context="kind-primary" -n istio-system rollout status deployment/kiali --timeout=120s
+else
+  echo "    (Kiali not installed, skipping)"
+fi
 
 echo ""
 echo "Done. kwok cluster '$NAME' joined the mesh (context: $CTX, network: $NETWORK)."
