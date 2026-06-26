@@ -6,9 +6,7 @@ terraform.tfstate.*
 terraform.tfstate
 config.json
 kubeconfig/
-certs/root-key.pem
-certs/root-cert.srl
-certs/primary/
-certs/remote-1/
-certs/remote-2/
-certs/root-cert.pem
+certs/*
+!certs/generate.sh
+!certs/root-ca.conf
+kwok/kwok-clusters.json
